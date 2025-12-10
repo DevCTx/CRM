@@ -1,8 +1,11 @@
 import unittest
-from crm import User  
-
+from crm import User, get_all_users  
+from tinydb import TinyDB
+from tinydb.storages import MemoryStorage
+from pathlib import Path
 
 class TestUser(unittest.TestCase):
+    """Tests for the user data"""
 
     def test_valid_user_creation(self):
         """Tests that a valid user is created correctly"""
@@ -139,6 +142,111 @@ class TestUser(unittest.TestCase):
         for number in self.invalid_numbers:
             with self.assertRaises(ValueError):
                 User("NotRelevant", "NotRelevant", number)
+
+
+class TestUserDatabase(unittest.TestCase):
+    """Tests for database operations"""
+    
+    @classmethod
+    def setUpClass(cls):    # "Executed once before each test"
+        """Close the original file-based DB once before all tests"""
+        User.DB.close()
+
+    def setUp(self):        # "Executed before each test"
+        """Use an in-memory DB instead of the JSON DB before each test"""
+        User.DB = TinyDB(storage=MemoryStorage)
+    
+    def tearDown(self):     # "Executed after each test"
+        """Clean up the DB after each test"""
+        User.DB.drop_tables()
+        User.DB.close()
+
+    @classmethod
+    def tearDownClass(cls): # "Executed once after each test"
+        """Restore the original file-based DB after all tests"""
+        User.DB = TinyDB(Path(__file__).resolve().parent / "tinydb.json", indent=4)
+
+
+    def test_save_new_user(self):
+        """Test inserting a new user"""
+        user1 = User("Jean", "Dupont", "0123456789", "Paris")       # create a user instance
+        doc_user1 = user1.save()                                    # create a user in db
+        self.assertIsInstance(doc_user1, int)                       # verify it returns an id
+        self.assertEqual(doc_user1, 1)                              # verify the id is the first one (new db)
+    
+    def test_save_update_user(self):
+        """Test updating an existing user"""
+        user1 = User("Jean", "Dupont", "0123456789", "Paris")       # create a user instance
+        doc_user1 = user1.save()                                    # create a user in db
+        self.assertEqual(doc_user1, 1)                              # verify the id is the first one (new db)
+        user1.phone_number = "0111111111"                           # modify its phone number
+        doc_user1 = user1.save()                                    # update the user in db
+        self.assertEqual(doc_user1, 1)                              # verify the id is still the first one        
+        updated = User.DB.get(doc_id=1)                             # get information of the first document
+        self.assertEqual(updated['phone_number'], "0111111111")     # verify the phone number was updated
+    
+    def test_db_instance(self):
+        """Test retrieving the instance from the DB"""
+        user1 = User("Jean", "Dupont", "0123456789", "Paris")       # create 4 user instances
+        user2 = User("Marie", "Morrin", "0198765432", "Lyon")       
+        user3 = User("Marie", "Garnier", "0234567890", "Bordeaux")       
+        user4 = User("Pierre", "Dubois", "0122334455", "Rennes")       
+        user1.save()                                                # save only 3 users in db
+        user2.save()                                                
+        user3.save()                                                
+        
+        db_user2 = user2.db_instance                                # get the instance of the 2nd user from db
+        self.assertIsNotNone(db_user2)                              # verify the instance exists
+        self.assertEqual(db_user2['first_name'], "Marie")           # verify the first name is matching
+        self.assertEqual(db_user2['last_name'], "Morrin")           # verify the last name is matching
+        
+        db_user4 = user4.db_instance                                # get the instance of the 4th user from db
+        self.assertIsNone(db_user4)                                 # verify it returns None if user does not exists
+    
+    def test_exists(self):
+        """Test exists() returns True if user is saved"""
+        user1 = User("Jean", "Dupont", "0123456789", "Paris")       # create a user instance
+        self.assertFalse(user1.exists())                            # verify it returns False if user does not exists
+        user1.save()                                                # create a user in db
+        self.assertTrue(user1.exists())                             # verify it returns True if user exists
+        
+    def test_delete(self):
+        """Test deleting a user"""
+        user1 = User("Jean", "Dupont", "0123456789", "Paris")       # create a user instance
+
+        self.assertFalse(user1.exists())                            # verify the user does not exist in db
+        result = user1.delete()                                     # try to delete unexisting user
+        self.assertIsNone(result)                                   # verify it returns None
+
+        doc_user1 = user1.save()                                    # create a user in db
+        self.assertEqual(doc_user1, 1)                              # verify the id is the first one (new db)
+        self.assertTrue(user1.exists())                             # verify the user exists in db
+
+        db_user1 = user1.delete()                                   # delete the existing user
+        self.assertEqual(doc_user1, 1)                              # verify the id is the first one (new db)
+        self.assertFalse(user1.exists())                            # verify the user does not exist in db anymore
+    
+    def test_get_all_users(self):
+        """Test get_all_users() with DB"""
+        users = get_all_users()                                     # Try get users from empty DB
+        self.assertEqual(len(users), 0)                             # verify it returns 0
+    
+        user1 = User("Jean", "Dupont", "0123456789", "Paris")       # create 2 user instances
+        user2 = User("Marie", "Morrin", "0198765432", "Lyon")       
+        user1.save()                                                # save 2 users in db
+        user2.save()                                                
+        users = get_all_users()                                     # get users from DB
+        self.assertEqual(len(users), 2)                             # verify it returns 3
+        self.assertIsInstance(users[0], User)                       # verify user1 is a User instance
+        self.assertIsInstance(users[1], User)                       # verify user2 is a User instance
+    
+    def test_no_duplicate(self):
+        """Test multiple saves don't create duplicates"""
+        user1 = User("Jean", "Dupont", "0123456789", "Paris")       # create user instance
+        user2 = User("Jean", "Dupont", "0123456789", "Paris")       # create identical user instance
+        user1.save()
+        user2.save()
+        self.assertEqual(len(User.DB.all()), 1)                     # verify no duplicate
 
 
 if __name__ == "__main__":

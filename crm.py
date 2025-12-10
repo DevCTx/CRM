@@ -1,9 +1,12 @@
 import re
 import string
+from tinydb import TinyDB, where, table
+from pathlib import Path
 
 class User:
     """User Class to create user instances with personal data
     """
+    DB = TinyDB(Path(__file__).resolve().parent / "tinydb.json", indent=4)
 
     def __init__(self, first_name : str, last_name : str, phone_number : str = "", address : str = ""):
         self.first_name = User._check_name(first_name)
@@ -79,7 +82,7 @@ class User:
         Returns:
             str: phone_number if valid
         """
-        
+
         french_phone_regex = re.compile(r"""
             ^                                       # start of string
             (?:                                     # non-capturing group (not stored in memory): +33 or 0
@@ -100,19 +103,70 @@ class User:
            raise ValueError(f"Phone Number : {phone_number} is not valid")
         return phone_number
 
+    #-----------------------
+    # TinyDB Management
+    #-----------------------
+
+    def save(self) -> int :
+        """Insert or Update the new User into the database
+
+        Returns:
+            int: the index of the record into the database
+        """
+        if self.exists():
+            return User.DB.update(self.__dict__, doc_ids=[self.db_instance.doc_id])[0]
+        else:
+            return User.DB.insert(self.__dict__)
+
+    @property 
+    def db_instance(self) -> table.Document :
+        """Get the User instance from the database
+        If several instances exist, returns only the first one.
+
+        Returns:
+            tinydb.table.Document : the User instance find in DB or None if does not exist
+        """
+        doc = User.DB.get((where('first_name') == self.first_name) & (where('last_name') == self.last_name))
+        if type(doc) is list:
+            return doc[0]
+        return doc
+
+    def exists(self) -> bool :
+        """Check if the user exists in database
+
+        Returns:
+            bool: True if the user exists in database else False
+        """
+        return self.db_instance is not None
+    
+    def delete(self) -> int:
+        if self.exists():
+            return User.DB.remove(doc_ids=[self.db_instance.doc_id])[0]
+        return None
+
+
+def get_all_users():
+    return [User(**user) for user in User.DB.all()]
+
 
 if __name__ == "__main__" :
     from faker import Faker
     
-    for _ in range(10):
-        fake = Faker("fr_FR")
-        user = User(
-            first_name=fake.first_name(),
-            last_name=fake.last_name(),
-            phone_number=fake.phone_number(),
-            address=fake.address()
-        )
-        print(repr(user))
-        print(str(user))
-        print("-"*20)
-    
+    # for _ in range(10):
+    #     fake = Faker("fr_FR")
+    #     user = User(
+    #         first_name=fake.first_name(),
+    #         last_name=fake.last_name(),
+    #         phone_number=fake.phone_number(),
+    #         address=fake.address()
+    #     )
+    #     user.save()
+    #     print("-"*20)
+
+    martin = User("Martin", "Voisin")
+    print(martin.delete())
+    print(martin.save())
+    martin.phone_number = "0123456789"
+    print(martin.phone_number)
+    print(martin.save())
+    print(type(martin.db_instance))
