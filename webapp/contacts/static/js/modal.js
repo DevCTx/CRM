@@ -1,3 +1,6 @@
+// ============================================
+// Modal Management for Add and Modify Buttons
+// ============================================
 const userModal = document.getElementById("userModal");
 
 if (userModal) {

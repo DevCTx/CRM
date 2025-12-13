@@ -189,7 +189,7 @@ def get_all_users() -> list[User]:
 if __name__ == "__main__" :
     from faker import Faker
     
-    for _ in range(10):
+    for _ in range(100):
         fake = Faker("fr_FR")
         user = User(
             first_name=fake.first_name(),
