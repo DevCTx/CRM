@@ -1,0 +1,30 @@
+body {
+    background: linear-gradient(to right,  rgb(15, 50, 85), #000000,  rgb(15, 50, 85));
+    min-height: 100vh;
+}
+
+.main {
+    min-height: 100vh;
+    min-width: 320px;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.btn-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+
+@media screen and (min-width: 640px) {
+    .btn-floating {
+        right: calc((100vw - 640px) / 2 + 20px);
+    }
+}
+
+

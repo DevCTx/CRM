@@ -189,16 +189,16 @@ def get_all_users() -> list[User]:
 if __name__ == "__main__" :
     from faker import Faker
     
-    # for _ in range(10):
-    #     fake = Faker("fr_FR")
-    #     user = User(
-    #         first_name=fake.first_name(),
-    #         last_name=fake.last_name(),
-    #         phone_number=fake.phone_number(),
-    #         address=fake.address()
-    #     )
-    #     user.save()
-    #     print("-"*20)
+    for _ in range(10):
+        fake = Faker("fr_FR")
+        user = User(
+            first_name=fake.first_name(),
+            last_name=fake.last_name(),
+            phone_number=fake.phone_number(),
+            address=fake.address()
+        )
+        user.save()
+        print("-"*20)
 
     # martin = User("Martin", "Voisin")
     # print(martin.save())

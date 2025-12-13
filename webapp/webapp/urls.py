@@ -16,11 +16,12 @@ Including another URLconf
 """
 
 from django.urls import path
-from contacts.views import index, add_contact, delete_contact
+from contacts.views import index, add_contact, modify_contact, delete_contact
 
 urlpatterns = [
     path('', index, name="index"),
     path('add/', add_contact, name="add-contact"),
+    path('modify/<int:user_id>/', modify_contact, name="modify-contact"),
     path('delete/<int:user_id>/', delete_contact, name='delete-contact')
     
 ]

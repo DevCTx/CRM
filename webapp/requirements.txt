@@ -1,0 +1,7 @@
+asarPy==1.0.1
+asgiref==3.11.0
+Django==6.0
+Faker==38.2.0
+sqlparse==0.5.4
+tinydb==4.8.2
+tzdata==2025.2
