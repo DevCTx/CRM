@@ -99,6 +99,17 @@ python -m unittest test_crm -v
 | POST | `/modify/<contact_id>/` | Edit contact |
 | POST | `/delete/<contact_id>/` | Delete contact |
 
+## Screenshots
+
+### Main screen
+![Main screen](screenshots/main_screen.png)
+
+### Modal screen
+![Modal screen](screenshots/modal_screen.png)
+
+### Real-Time Search screen
+![Real-Time Search screen](screenshots/RTsearch_screen.png)
+
 ## License
 
-MIT - [DevCTx](https://github.com/DevCTx/)
+MIT - [DevCTx](LICENSE.txt)
