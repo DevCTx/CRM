@@ -1,6 +1,6 @@
 # CRM Contacts
 
-Lightweight CRM built with Python, Django and TinyDB.
+Light CRM built with Python, Django and TinyDB.
 
 ## Features
 
